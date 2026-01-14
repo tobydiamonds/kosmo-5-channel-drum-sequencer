@@ -57,106 +57,38 @@ void printIntln(uint16_t value) {
   Serial.println();
 }
 
+
 struct DrumSequencerChannel {
-  uint16_t page1;
-  uint16_t page2;
-  uint16_t page3;
-  uint16_t page4;
-  int divider;
-  int lastStep;
-  bool enabled;
+  uint16_t page[4] = {0};
+  int divider = 6;
+  int lastStep = 15;
+  bool enabled = true;  
 };
 
-struct DrumSequencerRegisters {
-  bool chainModeEnabled;
-
-  uint16_t ch1_page1;
-  uint16_t ch1_page2;
-  uint16_t ch1_page3;
-  uint16_t ch1_page4;  
-  int ch1_divider;
-  int ch1_lastStep;
-  bool ch1_enabled;  
-
-  uint16_t ch2_page1;
-  uint16_t ch2_page2;
-  uint16_t ch2_page3;
-  uint16_t ch2_page4;  
-  int ch2_divider;
-  int ch2_lastStep;
-  bool ch2_enabled;    
-
-  uint16_t ch3_page1;
-  uint16_t ch3_page2;
-  uint16_t ch3_page3;
-  uint16_t ch3_page4;  
-  int ch3_divider;
-  int ch3_lastStep;
-  bool ch3_enabled;    
-
-  uint16_t ch4_page1;
-  uint16_t ch4_page2;
-  uint16_t ch4_page3;
-  uint16_t ch4_page4;  
-  int ch4_divider;
-  int ch4_lastStep;
-  bool ch4_enabled;    
-
-  uint16_t ch5_page1;
-  uint16_t ch5_page2;
-  uint16_t ch5_page3;
-  uint16_t ch5_page4;  
-  int ch5_divider;
-  int ch5_lastStep;
-  bool ch5_enabled;          
+struct DrumSequencer {
+  DrumSequencerChannel channel[5];
+  bool chainModeEnabled = false;  
 };
 
-void printDrumSequencerRegisters(DrumSequencerRegisters reg) {
+void printDrumSequencerChannel(DrumSequencerChannel channel, int index) {
   char s[100];
-  sprintf(s, "ch1 => laststep: %d | divider: %d | output enabled: ", reg.ch1_lastStep, reg.ch1_divider);
+  sprintf(s, "ch%d => laststep: %d | divider: %d | output enabled: ", index, channel.lastStep, channel.divider);
   Serial.print(s);
-  Serial.println(reg.ch1_enabled);
-  Serial.print("steps: ");
-  printInt(reg.ch1_page1);
-  printInt(reg.ch1_page2);
-  printInt(reg.ch1_page3);
-  printIntln(reg.ch1_page4);      
-
-  sprintf(s, "ch2 => laststep: %d | divider: %d | output enabled: ", reg.ch2_lastStep, reg.ch2_divider);
-  Serial.print(s);
-  Serial.println(reg.ch2_enabled);
-  Serial.print("steps: ");
-  printInt(reg.ch2_page1);
-  printInt(reg.ch2_page2);
-  printInt(reg.ch2_page3);
-  printIntln(reg.ch2_page4);
-
-  sprintf(s, "ch3 => laststep: %d | divider: %d | output enabled: ", reg.ch3_lastStep, reg.ch3_divider);
-  Serial.print(s);
-  Serial.println(reg.ch3_enabled);
-  Serial.print("steps: ");
-  printInt(reg.ch3_page1);
-  printInt(reg.ch3_page2);
-  printInt(reg.ch3_page3);
-  printIntln(reg.ch3_page4);    
-
-  sprintf(s, "ch4 => laststep: %d | divider: %d | output enabled: ", reg.ch4_lastStep, reg.ch4_divider);
-  Serial.print(s);
-  Serial.println(reg.ch4_enabled);
-  Serial.print("steps: ");
-  printInt(reg.ch4_page1);
-  printInt(reg.ch4_page2);
-  printInt(reg.ch4_page3);
-  printIntln(reg.ch4_page4);    
-
-  sprintf(s, "ch5 => laststep: %d | divider: %d | output enabled: ", reg.ch5_lastStep, reg.ch5_divider);
-  Serial.print(s);
-  Serial.println(reg.ch5_enabled);
-  Serial.print("steps: ");
-  printInt(reg.ch5_page1);
-  printInt(reg.ch5_page2);
-  printInt(reg.ch5_page3);
-  printIntln(reg.ch5_page4);              
+  Serial.println(channel.enabled);
+  Serial.print("steps: ");  
+  for(int i=0; i<4; i++) {
+    printInt(channel.page[i]);
+  }
+  Serial.println();
 }
+
+void printDrumSequencer(DrumSequencer drums) {
+  for(int i=0; i<5; i++) {
+    printDrumSequencerChannel(drums.channel[i], i);
+  }
+  Serial.print("chain mode enabled: ");
+  Serial.println(drums.chainModeEnabled);
+}
+
 
 #endif

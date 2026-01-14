@@ -468,10 +468,7 @@ void loop() {
   }
 
   if(pageButton.released()) {
-    if(programming) {
-      Serial.println("we are in programming mode and the tap button has been pressed");
-      readyToSendRegisters = true;
-    } else if(shortPress) { // change page
+    if(shortPress) { // change page
       if(currentPage < MAX_PAGE-1)
         currentPage++;
       else
@@ -534,4 +531,8 @@ void loop() {
       registers = nextRegisters;
     }
   }  
+
+  if(currentRequestChunk != 0 && now > (lastMasterRequest + MASTER_REQUEST_TIMEOUT)) {
+    resetSlaveRequestBuffer();
+  }
 }

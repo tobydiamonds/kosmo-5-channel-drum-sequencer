@@ -242,47 +242,12 @@ public:
     return _channelNumber;
   }
 
-  void LoadPartData(DrumSequencerRegisters data) {
-    if(_channelNumber==0) {
-      _enabled = data.ch1_enabled;
-      _divider = data.ch1_divider;
-      _lastStep = data.ch1_lastStep;
-      _steps[0] = data.ch1_page1;
-      _steps[1] = data.ch1_page2;
-      _steps[2] = data.ch1_page3;
-      _steps[3] = data.ch1_page4;
-    } else if(_channelNumber==1) {
-      _enabled = data.ch2_enabled;
-      _divider = data.ch2_divider;
-      _lastStep = data.ch2_lastStep;
-      _steps[0] = data.ch2_page1;
-      _steps[1] = data.ch2_page2;
-      _steps[2] = data.ch2_page3;
-      _steps[3] = data.ch2_page4;
-    } else if(_channelNumber==2) {
-      _enabled = data.ch3_enabled;
-      _divider = data.ch3_divider;
-      _lastStep = data.ch3_lastStep;
-      _steps[0] = data.ch3_page1;
-      _steps[1] = data.ch3_page2;
-      _steps[2] = data.ch3_page3;
-      _steps[3] = data.ch3_page4;
-    } else if(_channelNumber==3) {
-      _enabled = data.ch4_enabled;
-      _divider = data.ch4_divider;
-      _lastStep = data.ch4_lastStep;
-      _steps[0] = data.ch4_page1;
-      _steps[1] = data.ch4_page2;
-      _steps[2] = data.ch4_page3;
-      _steps[3] = data.ch4_page4;
-    } else if(_channelNumber==4) {
-      _enabled = data.ch5_enabled;
-      _divider = data.ch5_divider;
-      _lastStep = data.ch5_lastStep;
-      _steps[0] = data.ch5_page1;
-      _steps[1] = data.ch5_page2;
-      _steps[2] = data.ch5_page3;
-      _steps[3] = data.ch5_page4;
+  void LoadPartData(DrumSequencer data) {
+    _enabled = data.channel[_channelNumber].enabled;
+    _divider = data.channel[_channelNumber].divider;
+    _lastStep = data.channel[_channelNumber].lastStep;
+    for(int i=0; i<4; i++) {
+      _steps[i] = data.channel[_channelNumber].page[i];
     }
     _outputLedState = _enabled;
   }
