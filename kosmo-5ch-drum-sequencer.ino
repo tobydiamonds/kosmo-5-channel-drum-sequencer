@@ -437,6 +437,11 @@ void loop() {
   // if(now > (lastClockPulse + pulseInterval)) {
   //   onClockPulse();
   // }
+  // handle reset
+  if(now > (lastClockPulse + 2000) && hasPulse) {
+    reset = true;
+    hasPulse = false;
+  }  
 
   // handle reset
   if(reset) {
