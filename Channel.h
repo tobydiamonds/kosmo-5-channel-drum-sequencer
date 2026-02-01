@@ -152,6 +152,12 @@ public:
       uint16_t stepInPage = _currentStep % 16;
       uint16_t pageSteps = GetStepsByPage(page, false);
 
+      if(_channelNumber==0) {
+      char s[100];
+      sprintf(s, "currentpage: %d  currentstep: %d  laststep: %d", page, _currentStep, _lastStep);
+      Serial.println(s);     
+      } 
+
       _output = _enabled && (pageSteps & (1 << (15 - stepInPage))) != 0;
 
       if(_output) {
@@ -246,6 +252,8 @@ public:
     _enabled = data.channel[_channelNumber].enabled;
     _divider = data.channel[_channelNumber].divider;
     _lastStep = data.channel[_channelNumber].lastStep;
+    if(_onLastStepSet)
+      _onLastStepSet(_channelNumber, _lastStep);    
     for(int i=0; i<4; i++) {
       _steps[i] = data.channel[_channelNumber].page[i];
     }

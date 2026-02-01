@@ -391,7 +391,6 @@ void triggerClockPulse() {
     else
       currentStep = 0;
 
-
     if(oldStep != currentStep) {
       oldStep = currentStep;
       triggerStep();
@@ -462,15 +461,35 @@ void loop() {
     Serial.println("reset!");
   }
 
+  // load new data into drum channels?
+  if(newPartData && (!hasPulse || currentStep == allChannelsLastStep)) { // last step in current part
+    newPartData = false;
+    Serial.println("Next part playing");
+
+    for(int i=0; i<CHANNELS; i++) {
+      channels[i].LoadPartData(nextRegisters);
+
+      registers = nextRegisters;
+    }
+  } 
+
   // handle clock in
   if(edgeDetected) {
     edgeDetected = false;
     triggerClockPulse();
   }
-
+  
   if(now > (lastClockPulse + 2)) {
     digitalWrite(CLOCK_OUT_PIN, LOW);
   }
+
+
+
+  for(int i=0; i<CHANNELS; i++) {
+    channels[i].Run(now, channelSetLastStepMode, currentPage);
+  }
+
+
 
   if(pageButton.released()) {
     if(shortPress) { // change page
@@ -510,9 +529,7 @@ void loop() {
     }
   }
 
-  for(int i=0; i<CHANNELS; i++) {
-    channels[i].Run(now, channelSetLastStepMode, currentPage);
-  }
+
 
   if(now >(lastClockInLed + LED_SHORT_PULSE)) {
     clockInLed = false;
@@ -528,14 +545,7 @@ void loop() {
     updateUI();
   }
 
-  // load new data into drum channels?
-  if(newPartData && (!hasPulse || currentStep == allChannelsLastStep-1)) { // last step in current part
-    newPartData = false;
-    for(int i=0; i<CHANNELS; i++) {
-      channels[i].LoadPartData(nextRegisters);
-      registers = nextRegisters;
-    }
-  }  
+ 
 
   if(currentRequestChunk != 0 && now > (lastMasterRequest + MASTER_REQUEST_TIMEOUT)) {
     resetSlaveRequestBuffer();
