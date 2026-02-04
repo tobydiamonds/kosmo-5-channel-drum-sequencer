@@ -385,19 +385,19 @@ void triggerClockPulse() {
   for(int i=0; i<CHANNELS; i++)
     channels[i].Pulse(ppqnCounter, now);
 
+  if(oldStep != currentStep) {
+    oldStep = currentStep;
+    triggerStep();
+  }
+
   if (ppqnCounter % 6 == 0) {
     if(currentStep < allChannelsLastStep)
       currentStep++;
     else
       currentStep = 0;
 
-    if(oldStep != currentStep) {
-      oldStep = currentStep;
-      triggerStep();
-    }
+
   }
-
-
 }
 
 void triggerStep() {
@@ -462,12 +462,13 @@ void loop() {
   }
 
   // load new data into drum channels?
-  if(newPartData && (!hasPulse || currentStep == allChannelsLastStep)) { // last step in current part
+  if(newPartData && (!hasPulse || currentStep == GetAllChannelsLastStep())) { // last step in current part
     newPartData = false;
-    Serial.println("Next part playing");
+    //Serial.println("Next part playing");
 
     for(int i=0; i<CHANNELS; i++) {
       channels[i].LoadPartData(nextRegisters);
+      channels[i].Reset();
 
       registers = nextRegisters;
     }

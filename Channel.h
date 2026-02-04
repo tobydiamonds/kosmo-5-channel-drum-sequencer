@@ -135,6 +135,25 @@ public:
     // happens 24 times pr quarter node 
     _hasPulse = true;
     if(pulses % _divider == 0) {
+
+      uint8_t page = _currentStep / 16;
+      uint16_t stepInPage = _currentStep % 16;
+      uint16_t pageSteps = GetStepsByPage(page, false);
+
+      // if(_channelNumber==0) {
+      //   char s[100];
+      //   sprintf(s, "currentpage: %d  currentstep: %d  laststep: %d", page, _currentStep, _lastStep);
+      //   Serial.println(s);     
+      // } 
+
+      _output = _enabled && (pageSteps & (1 << (15 - stepInPage))) != 0;
+
+      if(_output) {
+        digitalWrite(_outputPin, HIGH);
+        _lastOutputTime = now;
+        _outputLedState = true;
+      }
+
       if(_currentStep < _lastStep)
         _currentStep++;
       else
@@ -148,23 +167,6 @@ public:
 
       _lastPulseTime = now;
 
-      uint8_t page = _currentStep / 16;
-      uint16_t stepInPage = _currentStep % 16;
-      uint16_t pageSteps = GetStepsByPage(page, false);
-
-      if(_channelNumber==0) {
-      char s[100];
-      sprintf(s, "currentpage: %d  currentstep: %d  laststep: %d", page, _currentStep, _lastStep);
-      Serial.println(s);     
-      } 
-
-      _output = _enabled && (pageSteps & (1 << (15 - stepInPage))) != 0;
-
-      if(_output) {
-        digitalWrite(_outputPin, HIGH);
-        _lastOutputTime = now;
-        _outputLedState = true;
-      }
 
       return _output;
     } else {
