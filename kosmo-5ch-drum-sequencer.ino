@@ -456,22 +456,20 @@ void loop() {
     lastClockInLed = 0;
     lastClockOutLed = 0;
     edgeDetected = false;
+    partDataIndex = 0;
     for(int i=0; i<CHANNELS; i++)
       channels[i].Reset();
     Serial.println("reset!");
   }
 
   // load new data into drum channels?
-  if(newPartData && (!hasPulse || currentStep == GetAllChannelsLastStep())) { // last step in current part
+  if(newPartData && (!hasPulse || currentStep == 0)) { 
     newPartData = false;
-    //Serial.println("Next part playing");
-
     for(int i=0; i<CHANNELS; i++) {
       channels[i].LoadPartData(nextRegisters);
       channels[i].Reset();
-
-      registers = nextRegisters;
     }
+    registers = nextRegisters;
   } 
 
   // handle clock in
