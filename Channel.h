@@ -1,7 +1,7 @@
 #ifndef Channel_h
 #define Channel_h
 
-#include "Definitions.h"
+#include "Models.h"
 #include "AnalogInput.h"
 
 typedef void (*LastStepSet)(uint8_t, uint8_t); // channel, last step
@@ -250,7 +250,7 @@ public:
     return _channelNumber;
   }
 
-  void LoadPartData(DrumSequencer data) {
+  void LoadPartData(DrumSequencerPart data) {
     _enabled = data.channel[_channelNumber].enabled;
     _divider = data.channel[_channelNumber].divider;
     _lastStep = data.channel[_channelNumber].lastStep;

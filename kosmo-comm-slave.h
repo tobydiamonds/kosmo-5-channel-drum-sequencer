@@ -71,9 +71,9 @@ void receivePartIndex() {
     if(currentPartIndex >= 0 && currentPartIndex < MAX_PARTS) {
       nextRegisters = parts[currentPartIndex];
 
-      Serial.print("part ");
-      Serial.print(currentPartIndex);
-      Serial.print(" => ");
+      // Serial.print("part ");
+      // Serial.print(currentPartIndex);
+      // Serial.print(" => ");
 
       //printDrumSequencer(nextRegisters);
 
@@ -114,9 +114,8 @@ void receivePartData() {
     lastMasterReceive = 0;
 
 
-    Serial.print("part ");
-    Serial.print(partDataIndex);
-    Serial.print(" => ");
+    Serial.print("PART ");
+    Serial.println(partDataIndex);
 
     printDrumSequencer(parts[partDataIndex]);
 

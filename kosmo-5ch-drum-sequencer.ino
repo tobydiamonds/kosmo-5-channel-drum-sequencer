@@ -1,8 +1,11 @@
 #include <Button.h>
-#include "Definitions.h"
+//#include "Definitions.h"
 #include "AnalogInput.h"
 #include "Channel.h"
-#include "kosmo-comm-slave.h"
+//#include "kosmo-comm-slave.h"
+#include "Common.h"
+#include "Models.h"
+#include "KosmoSlaveI2CService.h"
 
 #define CLOCK_IN_PIN 2
 #define RESET_IN_PIN 3
@@ -57,6 +60,11 @@ uint16_t currentPageSteps[CHANNELS] = {0};
 int bpm120NoteInterval = 500; // 500ms interval between quarter notes at 120bpm
 float pulseInterval = bpm120NoteInterval / PPQN;
 
+KosmoSlaveI2CService<DrumSequencerPart> slave(9);
+
+bool newPartData = false;
+int currentPartIndex = -1;
+
 
 unsigned long now = 0;
 unsigned long lastScanInterval = 0;
@@ -107,6 +115,12 @@ void setup() {
   pinMode(CLOCK_OUT_PIN, OUTPUT);
   digitalWrite(CLOCK_OUT_PIN, LOW);
 
+  // i2c slave
+  slave.onSongPartsReceived(onSongPartsReceived);
+  slave.onPartIndexChanged(onPartIndexChanged);
+  slave.onStart(onStart);
+  slave.onStop(onStop);
+  slave.onAutomation(onAutomation);  
 
   pageButton.begin();
 
@@ -123,9 +137,33 @@ void setup() {
   allChannelsLastStep = GetAllChannelsLastStep();    
 
   // i2c comm
-  setupSlave(channels);
+  //setupSlave(channels);
 
   Serial.println("Drum Sequencer ready");
+}
+
+void onSongPartsReceived() {
+  currentPartIndex = 0;
+  newPartData = true;
+}
+
+void onPartIndexChanged(const int partIndex) {
+  currentPartIndex = partIndex;
+  newPartData = true;  
+}
+
+void onStart() {
+  Serial.println("START!!!");
+}
+
+void onStop() {
+  Serial.println("STOP!!!");
+}
+
+void onAutomation(Automation automation) {
+  char s[100];
+  sprintf(s, "automation => target: %d value: %d", automation.target, automation.value);
+  Serial.println(s);
 }
 
 uint16_t GetAllChannelsLastStep() {
@@ -140,11 +178,13 @@ uint16_t GetAllChannelsLastStep() {
 
 void onLastStepSet(uint8_t channelNumber, uint8_t lastStep) {
   allChannelsLastStep = GetAllChannelsLastStep();
-  updateRegisterLastStep(channelNumber, lastStep);
+  //updateRegisterLastStep(channelNumber, lastStep);
+  slave.current.channel[channelNumber].lastStep = lastStep;
 }
 
 void onTempoDividerSet(uint8_t channelNumber, int divider) {
-  updateRegisterDivider(channelNumber, divider);
+  //updateRegisterDivider(channelNumber, divider);
+  slave.current.channel[channelNumber].divider = divider;
 }
 
 uint8_t read165byte() {
@@ -174,7 +214,8 @@ void scanOutputBoard() {
 
     if(state != uiOutputEnabledSwitchSnapshot[i]) {
       channels[i].SetEnabled(state);
-      updateRegisterChannelEnabled(i, state);
+      //updateRegisterChannelEnabled(i, state);
+      slave.current.channel[i].enabled = state ? 1 : 0; 
       uiOutputEnabledSwitchSnapshot[i] = state;
     }
   }
@@ -221,7 +262,8 @@ void scanInputs() {
 
               // Store back
               channels[i].SetSteps(currentPage, pageSteps);
-              updateRegisterPageSteps(i, currentPage, pageSteps); // update registers for i2c comm
+              //updateRegisterPageSteps(i, currentPage, pageSteps); // update registers for i2c comm
+              slave.current.channel[i].page[currentPage] = pageSteps;
 
               // Update snapshot so we don’t re-trigger until another change
               uiSwitchSnapshot[i] = currentUI;
@@ -456,20 +498,21 @@ void loop() {
     lastClockInLed = 0;
     lastClockOutLed = 0;
     edgeDetected = false;
-    partDataIndex = 0;
+    //partDataIndex = 0;
     for(int i=0; i<CHANNELS; i++)
       channels[i].Reset();
     Serial.println("reset!");
   }
 
   // load new data into drum channels?
-  if(newPartData && (!hasPulse || currentStep == 0)) { 
+  if(newPartData && currentPartIndex >= 0 && (!hasPulse || currentStep == 0)) { 
     newPartData = false;
     for(int i=0; i<CHANNELS; i++) {
-      channels[i].LoadPartData(nextRegisters);
+      //channels[i].LoadPartData(nextRegisters);
+      channels[i].LoadPartData(slave.getPart(currentPartIndex));
       channels[i].Reset();
     }
-    registers = nextRegisters;
+    //registers = nextRegisters;
   } 
 
   // handle clock in
@@ -546,7 +589,7 @@ void loop() {
 
  
 
-  if(currentRequestChunk != 0 && now > (lastMasterRequest + MASTER_REQUEST_TIMEOUT)) {
-    resetSlaveRequestBuffer();
-  }
+  // if(currentRequestChunk != 0 && now > (lastMasterRequest + MASTER_REQUEST_TIMEOUT)) {
+  //   resetSlaveRequestBuffer();
+  // }
 }
