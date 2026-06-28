@@ -132,10 +132,10 @@ private:
 
     lastReceive = millis();
 
-    char s[100];
-    sprintf(s, "receiving part %d  chunk %d/%d - size: %d - offset: %d", partIndex, currentChunk, totalChunks, size-1, offset);
-    Serial.println(s);
-    printBuffer(buffer, size);
+    // char s[100];
+    // sprintf(s, "receiving part %d  chunk %d/%d - size: %d - offset: %d", partIndex, currentChunk, totalChunks, size-1, offset);
+    // Serial.println(s);
+    // printBuffer(buffer, size);
 
     for(int i=1; i<size; i++) { // buffer[0] has the chunksize
       rxBuffer[offset + i-1] = buffer[i];

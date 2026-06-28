@@ -161,9 +161,12 @@ void onStop() {
 }
 
 void onAutomation(Automation automation) {
-  char s[100];
-  sprintf(s, "automation => target: %d value: %d", automation.target, automation.value);
-  Serial.println(s);
+  if(automation.target <= 0x04) {
+    int ch = automation.target;
+    bool enabled = automation.value > 0;
+    channels[ch].SetEnabled(enabled);
+    slave.current.channel[ch].enabled = enabled ? 1 : 0;
+  }
 }
 
 uint16_t GetAllChannelsLastStep() {
