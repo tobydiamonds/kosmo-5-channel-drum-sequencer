@@ -152,13 +152,15 @@ public:
   KosmoSlaveI2CService(uint8_t address)
     : address(address) {
     instance = this;
-    Wire.begin(address);
-    //Wire.setClock(400000);
-    Wire.onReceive(staticOnReceive);
-    Wire.onRequest(staticOnRequest);
     totalChunks = sizeof(PartType) / I2C_CHUNK_MAX;
     if(totalChunks==0)
       totalChunks = 1;
+  }
+
+  void begin() {
+    Wire.begin(address);
+    Wire.onReceive(staticOnReceive);
+    Wire.onRequest(staticOnRequest);
   }
 
   PartType current;

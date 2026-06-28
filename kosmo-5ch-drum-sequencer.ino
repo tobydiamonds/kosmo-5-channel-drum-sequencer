@@ -61,7 +61,6 @@ int bpm120NoteInterval = 500; // 500ms interval between quarter notes at 120bpm
 float pulseInterval = bpm120NoteInterval / PPQN;
 
 KosmoSlaveI2CService<DrumSequencerPart> slave(9);
-
 bool newPartData = false;
 int currentPartIndex = -1;
 
@@ -116,6 +115,7 @@ void setup() {
   digitalWrite(CLOCK_OUT_PIN, LOW);
 
   // i2c slave
+  slave.begin();
   slave.onSongPartsReceived(onSongPartsReceived);
   slave.onPartIndexChanged(onPartIndexChanged);
   slave.onStart(onStart);

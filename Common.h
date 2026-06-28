@@ -10,7 +10,7 @@
 #define CHANNELS 5
 #define DRUM_CHANNELS 5
 
-#define PARTS 8
+#define PARTS 16
 
 
 #define OUTPUT_PULSE 20
