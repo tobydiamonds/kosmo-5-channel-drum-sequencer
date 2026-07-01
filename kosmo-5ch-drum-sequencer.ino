@@ -63,6 +63,7 @@ float pulseInterval = bpm120NoteInterval / PPQN;
 KosmoSlaveI2CService<DrumSequencerPart> slave(9);
 bool newPartData = false;
 int currentPartIndex = -1;
+bool verboseMode = false;
 
 
 unsigned long now = 0;
@@ -145,11 +146,16 @@ void setup() {
 void onSongPartsReceived() {
   currentPartIndex = 0;
   newPartData = true;
+  if(verboseMode) Serial.println(F("PARTS_RX"));
 }
 
 void onPartIndexChanged(const int partIndex) {
   currentPartIndex = partIndex;
-  newPartData = true;  
+  newPartData = true;
+  if(verboseMode) {
+    Serial.print(F("PART:"));
+    Serial.println(partIndex);
+  }
 }
 
 void onStart() {
@@ -433,6 +439,18 @@ void triggerClockPulse() {
   if(oldStep != currentStep) {
     oldStep = currentStep;
     triggerStep();
+
+    if(verboseMode) {
+      uint8_t page = currentStep / STEPS_PR_PAGE;
+      Serial.print(F("S:"));
+      Serial.print(currentStep);
+      Serial.print(F(" P:"));
+      Serial.print(page);
+      Serial.print(F(" T:"));
+      for(int i=0; i<CHANNELS; i++)
+        Serial.print(channels[i].OutputLedState() ? '1' : '0');
+      Serial.println();
+    }
   }
 
   if (ppqnCounter % 6 == 0) {
@@ -468,6 +486,27 @@ void onClockPulse() {
 
 void onReset() {
   reset = true;
+}
+
+void printStatus() {
+  Serial.print(F("step:"));
+  Serial.print(currentStep);
+  Serial.print(F(" page:"));
+  Serial.print(currentPage);
+  Serial.print(F(" part:"));
+  Serial.print(currentPartIndex);
+  Serial.print(F(" pulse:"));
+  Serial.println(hasPulse ? F("yes") : F("no"));
+  for(int i=0; i<CHANNELS; i++) {
+    Serial.print(F("ch"));
+    Serial.print(i);
+    Serial.print(F(" ena:"));
+    Serial.print(channels[i].Enabled() ? 1 : 0);
+    Serial.print(F(" last:"));
+    Serial.print(channels[i].LastStep());
+    Serial.print(F(" step:"));
+    Serial.println(channels[i].CurrentStep());
+  }
 }
 
 unsigned long buttonPressTime = 0;
@@ -590,9 +629,33 @@ void loop() {
     updateUI();
   }
 
- 
+  slave.printPendingRx();
 
-  // if(currentRequestChunk != 0 && now > (lastMasterRequest + MASTER_REQUEST_TIMEOUT)) {
-  //   resetSlaveRequestBuffer();
-  // }
+  // serial command handling
+  {
+    static char cmdBuf[12];
+    static uint8_t cmdIdx = 0;
+    while(Serial.available()) {
+      char c = Serial.read();
+      if(c == '\n' || c == '\r') {
+        if(cmdIdx > 0) {
+          cmdBuf[cmdIdx] = '\0';
+          if(strcmp_P(cmdBuf, PSTR("verbose on")) == 0) {
+            verboseMode = true;
+            slave.verbose = true;
+            Serial.println(F("VERBOSE ON"));
+          } else if(strcmp_P(cmdBuf, PSTR("verbose off")) == 0) {
+            verboseMode = false;
+            slave.verbose = false;
+            Serial.println(F("VERBOSE OFF"));
+          } else if(strcmp_P(cmdBuf, PSTR("status")) == 0) {
+            printStatus();
+          }
+          cmdIdx = 0;
+        }
+      } else if(cmdIdx < sizeof(cmdBuf)-1) {
+        cmdBuf[cmdIdx++] = c;
+      }
+    }
+  }
 }

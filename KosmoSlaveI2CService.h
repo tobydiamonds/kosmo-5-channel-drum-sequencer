@@ -23,6 +23,10 @@ private:
   void (*initPartsCallback)(void) = nullptr;
   void (*automationCallback)(const Automation) = nullptr;
   void (*resetCallback)(void) = nullptr;
+
+  volatile uint8_t _lastRxInstruction = 0;
+  volatile uint8_t _lastRxSize = 0;
+  volatile bool _rxPending = false;
   
 
   static KosmoSlaveI2CService* instance;
@@ -61,10 +65,14 @@ private:
 
   void onReceive(int size) {
     uint8_t buffer[I2C_MAX] = {0};
-    size_t bytesRead = Wire.readBytes(buffer, size);  
+    size_t bytesRead = Wire.readBytes(buffer, size);
     bool handled = false;
 
     if(bytesRead == 0) return;
+
+    _lastRxInstruction = buffer[0];
+    _lastRxSize = bytesRead;
+    _rxPending = true;
 
     Instruction instruction = static_cast<Instruction>(buffer[0] & 0xF0);
     uint8_t partIndex = buffer[0] & 0x0F;
@@ -141,7 +149,7 @@ private:
       rxBuffer[offset + i-1] = buffer[i];
     }
 
-    if(currentChunk == totalChunks) {
+    if(currentChunk == totalChunks - 1) {
       memcpy((uint8_t*)&parts[partIndex], rxBuffer, totalPartSize);
       if(partIndex == (PARTS-1) && songPartsReceivedCallback)
         songPartsReceivedCallback();
@@ -149,18 +157,27 @@ private:
   }
 
 public:
+  bool verbose = false;
+
   KosmoSlaveI2CService(uint8_t address)
     : address(address) {
     instance = this;
-    totalChunks = sizeof(PartType) / I2C_CHUNK_MAX;
-    if(totalChunks==0)
-      totalChunks = 1;
+    totalChunks = (sizeof(PartType) + I2C_CHUNK_MAX - 1) / I2C_CHUNK_MAX;
   }
 
   void begin() {
     Wire.begin(address);
     Wire.onReceive(staticOnReceive);
     Wire.onRequest(staticOnRequest);
+  }
+
+  void printPendingRx() {
+    if(!verbose || !_rxPending) return;
+    _rxPending = false;
+    Serial.print(F("I2C:0x"));
+    Serial.print(_lastRxInstruction, HEX);
+    Serial.print(F(" sz:"));
+    Serial.println(_lastRxSize);
   }
 
   PartType current;
